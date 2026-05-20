@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Chyron Research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#fff;--sf:#F5F5F5;--sf2:#ECECEC;--bd:#E8E8E8;--bd2:#D0D0D0;
+  --ink:#0A0A0A;--ink2:#3C3C3C;--ink3:#909090;--ink4:#C8C8C8;
+  --green:#166d2c;--amber:#C47F00;--red:#B91C1C;
+  --green-l:rgba(22,109,44,.11);--amber-l:rgba(196,127,0,.11);--red-l:rgba(185,28,28,.11);
+  --sans:'Inter',system-ui,sans-serif;
+}
+html,body{height:100vh;max-height:100vh;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+body{display:flex;flex-direction:column;}
+
+@keyframes rowIn{from{opacity:0;transform:translateX(-5px);}to{opacity:1;transform:none;}}
+@keyframes slideUp{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:none;}}
+@keyframes ripple{0%{transform:scale(1);opacity:.65;}100%{transform:scale(3.4);opacity:0;}}
+@keyframes dotBlink{0%,100%{opacity:1;}50%{opacity:.4;}}
+@keyframes pfPing{0%{transform:scale(1);opacity:.75;}100%{transform:scale(2.8);opacity:0;}}
+@keyframes pfPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.22);}}
+@keyframes arrFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-2px);}}
+@keyframes shake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-5px);}40%,80%{transform:translateX(5px);}}
+@keyframes drawRingBtn{to{stroke-dashoffset:0;}}
+@keyframes drawMarkBtn{to{stroke-dashoffset:0;}}
+@keyframes tipIn{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:none;}}
+@keyframes appIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+@keyframes numPop{0%{transform:scale(1);}50%{transform:scale(1.035);}100%{transform:scale(1);}}
+.numPop{animation:numPop .32s ease;}
+
+#authOverlay{
+  position:fixed;inset:0;z-index:9999;background:#FAFAFA;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity .65s cubic-bezier(.22,1,.36,1);
+}
+#authOverlay.gone{opacity:0;pointer-events:none;}
+#authCard{width:320px;display:flex;flex-direction:column;align-items:center;}
+.auth-logo{font-size:22px;font-weight:700;letter-spacing:-.025em;color:var(--ink);margin-bottom:5px;}
+.auth-sub{font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--ink4);margin-bottom:38px;}
+#authForm{width:100%;display:flex;flex-direction:column;gap:10px;align-items:stretch;}
+.pw-field-wrap{position:relative;width:100%;}
+#pwInput{width:100%;padding:13px 44px 13px 16px;border:1px solid #E4E4E4;border-radius:10px;font-size:14px;font-family:var(--sans);background:#fff;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;letter-spacing:.04em;}
+#pwInput:focus{border-color:#AAAAAA;box-shadow:0 0 0 3px rgba(0,0,0,.05);}
+#pwInput.err{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.08);}
+#pwInput.shake{animation:shake .4s ease;}
+.pw-eye{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--ink4);display:flex;align-items:center;padding:4px;border-radius:4px;transition:color .12s;}
+.pw-eye:hover{color:var(--ink3);}
+#pwSubmit{width:100%;padding:13px;background:var(--ink);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;transition:opacity .15s,transform .1s,background .42s ease,border-color .42s ease;letter-spacing:.02em;position:relative;overflow:hidden;}
+#pwSubmit:hover:not(:disabled){opacity:.83;}
+#pwSubmit:active:not(:disabled){transform:scale(.99);}
+#pwBtnText{transition:opacity .18s ease,transform .18s ease;display:inline-block;}
+#pwBtnCheck{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;pointer-events:none;}
+.bcr{stroke-dasharray:57;stroke-dashoffset:57;}
+.bcr.go{animation:drawRingBtn .52s cubic-bezier(.22,1,.36,1) forwards;}
+.bcm{stroke-dasharray:20;stroke-dashoffset:20;}
+.bcm.go{animation:drawMarkBtn .4s cubic-bezier(.22,1,.36,1) .44s forwards;}
+#pwErr{height:14px;font-size:11px;font-weight:500;color:#EF4444;text-align:center;}
+
+header{flex-shrink:0;height:58px;display:flex;align-items:center;padding:0 22px 0 16px;border-bottom:1px solid var(--bd);background:var(--bg);}
+.brand{font-size:17px;font-weight:700;letter-spacing:-.022em;color:var(--ink);flex-shrink:0;}
+.h-gap{flex:1;}
+.h-right{display:flex;align-items:center;gap:13px;}
+.status-group{display:flex;align-items:center;gap:7px;}
+.rcon{position:relative;width:14px;height:14px;display:flex;align-items:center;justify-content:center;}
+.rpl{position:absolute;width:10px;height:10px;border-radius:50%;animation:ripple 2.4s ease-out infinite;}
+.rpl.d2{animation-delay:1.2s;}
+.sdot{width:8px;height:8px;border-radius:50%;z-index:1;animation:dotBlink 2.2s ease-in-out infinite;}
+.rcon.open .sdot{background:var(--green);}
+.rcon.open .rpl{background:var(--green-l);}
+.rcon.premarket .sdot{background:var(--amber);}
+.rcon.premarket .rpl{background:var(--amber-l);}
+.rcon.closed .sdot{background:var(--red);}
+.rcon.closed .rpl{background:var(--red-l);}
+.status-lbl{font-size:10.5px;font-weight:500;color:var(--ink3);}
+.hclock{font-size:10.5px;font-weight:400;color:var(--ink3);font-variant-numeric:tabular-nums;}
+.h-sep{width:1px;height:18px;background:var(--bd2);}
+.dr-wrap{position:relative;}
+.dr-btn{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);cursor:pointer;transition:border-color .12s,background .12s;}
+.dr-btn:hover,.dr-btn.open{border-color:var(--bd2);background:var(--sf2);}
+.dr-av{width:20px;height:20px;border-radius:50%;background:#0a4a1a;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:#fff;flex-shrink:0;}
+.dr-name{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--ink);}
+.dr-chev{width:12px;height:12px;color:var(--ink3);transition:transform .15s;flex-shrink:0;}
+.dr-btn.open .dr-chev{transform:rotate(180deg);}
+.dr-menu{position:absolute;top:calc(100% + 7px);right:0;min-width:242px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;padding:6px;opacity:0;transform:translateY(-5px) scale(.97);pointer-events:none;transition:opacity .14s,transform .14s;box-shadow:0 14px 40px rgba(0,0,0,.1);z-index:99;}
+.dr-menu.vis{opacity:1;transform:none;pointer-events:all;}
+.dev-card{background:linear-gradient(135deg,#f0f7f2,#e9f5ed);border:1px solid #c8e0d0;border-radius:9px;padding:11px 13px;margin:3px 2px 6px;}
+.dev-tag{font-size:8px;font-weight:700;letter-spacing:.13em;color:#2d7a3a;margin-bottom:3px;}
+.dev-title{font-size:12.5px;font-weight:700;color:var(--ink);}
+.dev-desc{font-size:10.5px;color:var(--ink3);margin-top:4px;line-height:1.5;}
+.dr-sep{height:1px;background:var(--bd);margin:4px 0;}
+.dr-item{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:7px;cursor:pointer;transition:background .1s;}
+.dr-item:hover{background:var(--sf);}
+.dr-item.lock:hover{background:#FEF2F2;}
+.dr-ico{width:13px;height:13px;color:var(--ink3);flex-shrink:0;margin-top:1px;}
+.dr-item.lock .dr-ico{color:#EF4444;}
+.dr-item-lbl{font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--ink);}
+.dr-item.lock .dr-item-lbl{color:#EF4444;}
+.dr-item-sub{font-size:10px;color:var(--ink3);margin-top:2px;}
+
+.main{flex:1;display:flex;min-height:0;overflow:hidden;}
+.sidebar{width:200px;flex-shrink:0;border-right:1px solid var(--bd);display:flex;flex-direction:column;padding:18px 16px 14px;overflow:hidden;background:var(--bg);}
+.slbl{font-size:8.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;display:block;}
+.spy-pr-row{display:flex;align-items:center;gap:6px;}
+.spy-price{font-size:20px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1;}
+.spy-arr{font-size:13px;display:inline-block;animation:arrFloat 1.9s ease-in-out infinite;}
+.spy-arr.up{color:var(--green);}
+.spy-arr.down{color:var(--red);}
+.spy-chg{font-size:10.5px;font-weight:500;margin-top:3px;font-variant-numeric:tabular-nums;}
+.spy-chg.up{color:var(--green);}
+.spy-chg.down{color:var(--red);}
+.spy-chg.flat{color:var(--ink3);}
+.sdiv{height:1px;background:var(--bd);margin:12px 0;flex-shrink:0;}
+.stat-list{display:flex;flex-direction:column;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd);font-size:11px;}
+.stat-row:last-child{border-bottom:none;}
+.stat-lbl{color:var(--ink3);font-weight:400;}
+.stat-val{color:var(--ink2);font-weight:600;font-variant-numeric:tabular-nums;}
+.sb-spacer{flex:1;}
+.jackson-card{background:#F2F2F2;border-radius:10px;padding:11px 13px;flex-shrink:0;margin-bottom:9px;}
+.jackson-tag{font-size:7.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;}
+.jackson-name{font-size:11px;font-weight:700;color:var(--ink2);margin-bottom:5px;}
+.jackson-desc{font-size:9px;color:var(--ink3);line-height:1.55;font-weight:400;}
+.sb-upd{text-align:center;font-size:9px;color:var(--ink4);font-weight:400;font-variant-numeric:tabular-nums;flex-shrink:0;}
+
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:18px 22px 14px;min-width:0;opacity:0;}
+.content.ready{animation:appIn .6s cubic-bezier(.22,1,.36,1) forwards;}
+.pf-block{flex-shrink:0;margin-bottom:15px;animation:slideUp .5s cubic-bezier(.22,1,.36,1) .1s both;}
+.pf-top{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.pf-ind{position:relative;width:8px;height:8px;flex-shrink:0;}
+.pf-ind .dot{width:8px;height:8px;border-radius:50%;background:var(--green);position:absolute;animation:pfPulse 2s ease-in-out infinite;}
+.pf-ind .ping{width:8px;height:8px;border-radius:50%;background:var(--green);position:absolute;animation:pfPing 2s ease-out infinite;}
+.pf-val{font-size:29px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.025em;line-height:1;}
+.pf-arr{font-size:19px;animation:arrFloat 1.9s ease-in-out infinite;display:inline-block;}
+.pf-arr.up{color:var(--green);}
+.pf-arr.down{color:var(--red);}
+.pf-metrics{display:flex;align-items:center;}
+.metric{display:flex;flex-direction:column;gap:2px;padding:0 14px;}
+.metric:first-child{padding-left:0;}
+.metric-val{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;}
+.metric-val.up{color:var(--green);}
+.metric-val.down{color:var(--red);}
+.metric-val.flat{color:var(--ink3);}
+.metric-lbl{font-size:8.5px;font-weight:600;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;}
+.metric-sep{width:1px;height:26px;background:var(--bd);}
+
+.sec-lbl{font-size:8.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink3);margin-bottom:9px;flex-shrink:0;display:block;animation:slideUp .5s cubic-bezier(.22,1,.36,1) .18s both;}
+.tbl-wrap{flex-shrink:0;border:1px solid var(--bd);border-radius:9px;overflow:hidden;animation:slideUp .5s cubic-bezier(.22,1,.36,1) .24s both;}
+table{width:100%;border-collapse:collapse;table-layout:fixed;}
+col.cc{width:17%;}col.cs{width:7%;}col.ce{width:9%;}col.cd{width:5%;}
+col.cm{width:7%;}col.cb{width:6.5%;}col.ca{width:6.5%;}col.ci{width:6.5%;}
+col.cdl{width:7%;}col.cg{width:7%;}col.ct{width:7%;}col.cv{width:6.5%;}col.co{width:7%;}
+thead tr{background:var(--sf);border-bottom:1px solid var(--bd);}
+thead th{font-size:8.5px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--ink3);padding:9px 9px 8px;text-align:right;white-space:nowrap;overflow:hidden;cursor:default;user-select:none;transition:color .1s;}
+thead th:first-child{text-align:left;}
+thead th:hover{color:var(--ink2);}
+tbody tr{border-bottom:1px solid var(--bd);opacity:0;}
+tbody tr.in{opacity:1;animation:rowIn .4s cubic-bezier(.22,1,.36,1) forwards;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--sf);}
+tbody td{padding:12px 9px;font-size:11.5px;font-weight:400;color:var(--ink2);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+tbody td:first-child{text-align:left;color:var(--ink);font-weight:500;}
+.td-s{color:var(--ink);font-weight:700;}
+.td-d{color:var(--ink3);}
+.td-neg{color:var(--red);font-weight:600;}
+.td-null{color:var(--ink4);}
+.badge{display:inline-block;font-size:7.5px;font-weight:700;letter-spacing:.07em;padding:2px 5px;border-radius:3px;background:var(--sf2);color:var(--ink3);margin-left:6px;vertical-align:middle;}
+.msg-row td{text-align:center;color:var(--ink3);padding:26px 0;font-size:10px;font-weight:500;letter-spacing:.1em;opacity:1;}
+
+.chart-sec{flex:1;display:flex;flex-direction:column;min-height:0;margin-top:13px;animation:slideUp .5s cubic-bezier(.22,1,.36,1) .3s both;}
+.chart-area{flex:1;min-height:0;position:relative;cursor:crosshair;}
+#chartSvg{width:100%;height:100%;display:block;overflow:visible;}
+#overlaySvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+#chartTooltip{position:absolute;display:none;pointer-events:none;z-index:10;background:rgba(18,18,18,.95);color:#fff;padding:9px 13px;border-radius:9px;font-size:11px;white-space:nowrap;border:1px solid rgba(255,255,255,.07);}
+#ttPf{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;}
+#ttSpy{font-size:10.5px;color:rgba(255,255,255,.55);margin-top:2px;font-variant-numeric:tabular-nums;}
+#ttTime{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px;}
+.tabs-wrap{flex-shrink:0;position:relative;padding-top:8px;}
+.chart-tabs{display:flex;justify-content:center;gap:2px;}
+.rtab{font-size:11px;font-weight:500;padding:4px 11px;border-radius:6px;cursor:pointer;color:var(--ink3);border:1px solid transparent;transition:all .12s;letter-spacing:.02em;}
+.rtab:hover:not(.disabled){color:var(--ink2);}
+.rtab.active{color:var(--ink);background:var(--sf);border-color:var(--bd);}
+.rtab.disabled{color:var(--ink4);cursor:default;}
+#tabTip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1C1C1C;color:#fff;padding:7px 13px;border-radius:8px;font-size:11px;font-weight:500;white-space:nowrap;display:none;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+#tabTip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#1C1C1C;}
+#colTip{position:fixed;z-index:500;display:none;background:#1C1C1C;color:#fff;padding:8px 12px;border-radius:8px;font-size:11px;max-width:230px;line-height:1.55;pointer-events:none;}
+#colTip.vis{animation:tipIn .14s ease forwards;}
+footer{flex-shrink:0;border-top:1px solid var(--bd);padding:8px 22px;display:flex;align-items:center;background:var(--bg);}
+.legal{font-size:clamp(7px,.57vw,8.5px);color:var(--ink3);line-height:1.6;letter-spacing:.02em;flex:1;text-align:center;font-weight:400;}
+</style>
+</head>
+<body>
+
+<div id="authOverlay">
+  <div id="authCard">
+    <div class="auth-logo">Chyron Research</div>
+    <div class="auth-sub">Secure Access</div>
+    <div id="authForm">
+      <div class="pw-field-wrap">
+        <input type="password" id="pwInput" autocomplete="current-password" placeholder="Password"/>
+        <button type="button" class="pw-eye" id="eyeBtn" onclick="togglePwVis()">
+          <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+        </button>
+      </div>
+      <button id="pwSubmit" onclick="submitPw()">
+        <span id="pwBtnText">Continue</span>
+        <svg id="pwBtnCheck" width="26" height="26" viewBox="0 0 26 26">
+          <circle class="bcr" cx="13" cy="13" r="10" fill="none" stroke="#A8DFBE" stroke-width="1.5"/>
+          <path class="bcm" d="M8 13 L11.5 16.5 L18 9.5" fill="none" stroke="#1A7A35" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div id="pwErr"></div>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="brand">Chyron Research</div>
+  <div class="h-gap"></div>
+  <div class="h-right">
+    <div class="status-group">
+      <div class="rcon" id="rcon"><div class="rpl"></div><div class="rpl d2"></div><div class="sdot" id="sdot"></div></div>
+      <span class="status-lbl" id="slbl">—</span>
+      <span class="hclock" id="hclock">—</span>
+    </div>
+    <div class="h-sep"></div>
+    <div class="dr-wrap" id="drWrap">
+      <button class="dr-btn" id="drBtn" onclick="toggleDr()">
+        <div class="dr-av">SP</div>
+        <span class="dr-name">SAMUEL PAUL STINELLI</span>
+        <svg class="dr-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+      </button>
+      <div class="dr-menu" id="drMenu">
+        <div class="dev-card">
+          <div class="dev-tag">In Development</div>
+          <div class="dev-title">Jackson Model</div>
+          <div class="dev-desc">Chyron's next-generation portfolio intelligence platform is actively being built.</div>
+        </div>
+        <div class="dr-sep"></div>
+        <div class="dr-item">
+          <svg class="dr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0"/></svg>
+          <div><div class="dr-item-lbl">SAMUEL PAUL STINELLI</div><div class="dr-item-sub">Managed Account · Chyron Research</div></div>
+        </div>
+        <div class="dr-item lock" onclick="lockAccount()">
+          <svg class="dr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+          <div class="dr-item-lbl">Lock Account</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <span class="slbl">SPY — S&amp;P 500 ETF</span>
+    <div class="spy-pr-row">
+      <span class="spy-price" id="spyPrice">—</span>
+      <span class="spy-arr flat" id="spyArr"></span>
+    </div>
+    <div class="spy-chg flat" id="spyChg">—</div>
+    <div class="sdiv"></div>
+    <div class="stat-list">
+      <div class="stat-row"><span class="stat-lbl">Open</span><span class="stat-val" id="spyOpen">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Prev Close</span><span class="stat-val" id="spyPrev">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">High</span><span class="stat-val" id="spyHigh">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Low</span><span class="stat-val" id="spyLow">—</span></div>
+      <div class="stat-row"><span class="stat-lbl">Volume</span><span class="stat-val" id="spyVol">—</span></div>
+    </div>
+    <div class="sb-spacer"></div>
+    <div class="jackson-card">
+      <div class="jackson-tag">Chyron Research</div>
+      <div class="jackson-name">Jackson Model</div>
+      <div class="jackson-desc">Jackson operates exclusively on SPY, deploying proprietary quantitative algorithms. Real-time volatility modeling, statistical momentum analysis, and multi-layered pattern recognition work in concert to identify optimal entries and exits with mathematical precision.</div>
+    </div>
+    <div class="sb-upd" id="lastUpd"></div>
+  </aside>
+
+  <div class="content" id="contentArea">
+    <div class="pf-block">
+      <div class="pf-top">
+        <div class="pf-ind"><div class="ping"></div><div class="dot"></div></div>
+        <div class="pf-val" id="pfVal">$2,691.43</div>
+        <span class="pf-arr flat" id="pfArr"></span>
+      </div>
+      <div class="pf-metrics">
+        <div class="metric">
+          <span class="metric-val flat" id="mToday">—</span>
+          <span class="metric-lbl">today</span>
+        </div>
+        <div class="metric-sep"></div>
+        <div class="metric">
+          <span class="metric-val flat" id="mAlltime">—</span>
+          <span class="metric-lbl">all time</span>
+        </div>
+      </div>
+    </div>
+
+    <span class="sec-lbl">Open Positions</span>
+    <div class="tbl-wrap">
+      <table>
+        <colgroup><col class="cc"/><col class="cs"/><col class="ce"/><col class="cd"/><col class="cm"/><col class="cb"/><col class="ca"/><col class="ci"/><col class="cdl"/><col class="cg"/><col class="ct"/><col class="cv"/><col class="co"/></colgroup>
+        <thead>
+          <tr>
+            <th data-tip="The standardized OCC option symbol encoding the underlying asset, expiration date, call or put type, and strike price.">Contract</th>
+            <th data-tip="The price at which this call gives the holder the right to purchase 100 shares of SPY upon exercise.">Strike</th>
+            <th data-tip="The date on which this contract expires. Unexercised options cease to have value after this date.">Expiry</th>
+            <th data-tip="Days to Expiration. Calendar days remaining until this contract reaches its expiry date.">DTE</th>
+            <th data-tip="The midpoint of the bid and ask spread, used as the estimated fair value of this contract.">Mark</th>
+            <th data-tip="The highest price a buyer is currently willing to pay to purchase this option contract.">Bid</th>
+            <th data-tip="The lowest price a seller is currently willing to accept to sell this option contract.">Ask</th>
+            <th data-tip="Implied Volatility. The market's consensus forecast of SPY's annualized price movement, derived from current option prices.">IV</th>
+            <th data-tip="Expected change in option price per $1 move in SPY. ATM calls carry a delta near 0.50.">Δ Delta</th>
+            <th data-tip="Rate of change in delta per $1 move in SPY. Measures how fast delta itself is shifting.">Γ Gamma</th>
+            <th data-tip="Daily time decay. The option loses this approximate dollar amount each day as expiration approaches.">Θ Theta</th>
+            <th data-tip="Change in option price per 1% rise in implied volatility. Long options benefit from rising IV.">ν Vega</th>
+            <th data-tip="Open Interest. Total number of outstanding contracts that have not been closed, exercised, or expired.">OI</th>
+          </tr>
+        </thead>
+        <tbody id="posBody"><tr class="msg-row"><td colspan="13">LOADING</td></tr></tbody>
+      </table>
+    </div>
+
+    <div class="chart-sec">
+      <div class="chart-area" id="chartArea">
+        <svg id="chartSvg"></svg>
+        <svg id="overlaySvg"></svg>
+        <div id="chartTooltip"><div id="ttPf"></div><div id="ttSpy"></div><div id="ttTime"></div></div>
+      </div>
+      <div class="tabs-wrap">
+        <div id="tabTip">Your portfolio with Chyron isn't old enough to show that data.</div>
+        <div class="chart-tabs">
+          <button class="rtab active" onclick="switchRange(this,'1d')">1D</button>
+          <button class="rtab" onclick="switchRange(this,'5d')">5D</button>
+          <button class="rtab" onclick="switchRange(this,'2w')">2W</button>
+          <button class="rtab disabled" data-dis>1M</button>
+          <button class="rtab disabled" data-dis>3M</button>
+          <button class="rtab disabled" data-dis>6M</button>
+          <button class="rtab disabled" data-dis>1Y</button>
+          <button class="rtab disabled" data-dis>MAX</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p class="legal">Investments involve risk, including loss of principal. Past performance does not guarantee future results. Securities are not FDIC insured or bank guaranteed. Displayed values are estimates for informational use only and do not constitute investment advice. Chyron Research is not a registered investment advisor. Consult a financial professional before investing.</p>
+</footer>
+
+<div id="colTip"></div>
+
+<script>
+var currentRange='1d', chartCache={}, CTTL={'1d':60000,'5d':300000,'2w':300000};
+var _cW=800,_cH=200,_pL=58,_pR=12,_pT=10,_pB=26;
+var _pts=[], _pfNow=2691.43, _firstLoad=true, _intervals=[], _eyeVisible=false;
+
+var EYE_ON='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.641 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>';
+var EYE_OFF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>';
+
+function togglePwVis(){
+  _eyeVisible=!_eyeVisible;
+  document.getElementById('pwInput').type=_eyeVisible?'text':'password';
+  document.getElementById('eyeBtn').innerHTML=_eyeVisible?EYE_OFF:EYE_ON;
+}
+
+document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter') submitPw();});
+
+function submitPw(){
+  var v=document.getElementById('pwInput').value;
+  if(v==='OldTrailRoad2828#'){
+    onAuthSuccess();
+  } else {
+    var inp=document.getElementById('pwInput');
+    inp.classList.remove('err','shake');
+    void inp.offsetWidth;
+    inp.classList.add('err','shake');
+    document.getElementById('pwErr').textContent='Incorrect password.';
+    inp.value='';
+    setTimeout(function(){inp.classList.remove('err','shake');document.getElementById('pwErr').textContent='';},1800);
+    inp.focus();
+  }
+}
+
+function onAuthSuccess(){
+  var btn=document.getElementById('pwSubmit');
+  var btnText=document.getElementById('pwBtnText');
+  var btnCheck=document.getElementById('pwBtnCheck');
+  btn.disabled=true;btn.style.pointerEvents='none';
+  btnText.style.opacity='0';btnText.style.transform='scale(.85)';
+  setTimeout(function(){
+    btn.style.background='#E4F5EA';btn.style.border='1px solid #A8DFBE';
+    btnCheck.style.display='block';
+    setTimeout(function(){btnCheck.querySelector('.bcr').classList.add('go');},40);
+    setTimeout(function(){btnCheck.querySelector('.bcm').classList.add('go');},460);
+    setTimeout(function(){
+      var overlay=document.getElementById('authOverlay');
+      overlay.classList.add('gone');
+      document.getElementById('contentArea').classList.add('ready');
+      setTimeout(function(){overlay.style.display='none';initAfterAuth();},650);
+    },1350);
+  },180);
+}
+
+function resetAuthState(){
+  var btn=document.getElementById('pwSubmit');
+  var btnText=document.getElementById('pwBtnText');
+  var btnCheck=document.getElementById('pwBtnCheck');
+  btnText.style.opacity='1';btnText.style.transform='';
+  btnCheck.style.display='none';
+  btnCheck.querySelector('.bcr').classList.remove('go');
+  btnCheck.querySelector('.bcm').classList.remove('go');
+  btn.style.background='';btn.style.border='';btn.disabled=false;btn.style.pointerEvents='';
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwErr').textContent='';
+  if(_eyeVisible) togglePwVis();
+}
+
+function lockAccount(){
+  document.getElementById('drBtn').classList.remove('open');
+  document.getElementById('drMenu').classList.remove('vis');
+  resetAuthState();
+  _firstLoad=true;
+  var overlay=document.getElementById('authOverlay');
+  overlay.classList.remove('gone');
+  overlay.style.opacity='0';overlay.style.display='flex';
+  overlay.style.transition='opacity .55s cubic-bezier(.22,1,.36,1)';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){overlay.style.opacity='1';});});
+  setTimeout(function(){overlay.style.transition='';},600);
+}
+
+function initAfterAuth(){
+  _intervals.forEach(function(id){clearInterval(id);});
+  _intervals=[];
+  loadMarket();
+  _intervals.push(setInterval(loadMarket,60000));
+  setTimeout(function(){loadChart('1d');},680);
+  _intervals.push(setInterval(function(){if(currentRange==='1d'){delete chartCache['1d'];loadChart('1d');}},120000));
+}
+
+function mktState(){
+  var et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  var d=et.getDay(),t=et.getHours()*60+et.getMinutes();
+  if(d===0||d===6) return 'closed';
+  if(t>=240&&t<570) return 'premarket';
+  if(t>=570&&t<960) return 'open';
+  return 'closed';
+}
+
+function tick(){
+  var ts=new Date().toLocaleString('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+  document.getElementById('hclock').textContent=ts+' ET';
+  var s=mktState();
+  document.getElementById('rcon').className='rcon '+s;
+  document.getElementById('slbl').textContent={'open':'Market Open','premarket':'Pre-Market','closed':'Market Closed'}[s]||'—';
+}
+
+function fd(n){if(n==null||n==='') return '—';return '$'+Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function fg(n){return n==null?'<span class="td-null">—</span>':Number(n).toFixed(4);}
+function fiv(n){return n==null?'<span class="td-null">—</span>':(Number(n)*100).toFixed(1)+'%';}
+function fk(n){return n==null?'<span class="td-null">—</span>':Number(n).toLocaleString();}
+
+function animNum(el,end,dur){
+  var t0=performance.now();
+  function step(now){
+    var p=Math.min((now-t0)/dur,1),e=1-Math.pow(1-p,3);
+    el.textContent=fd(end*e);
+    if(p<1) requestAnimationFrame(step);
+    else el.textContent=fd(end);
+  }
+  requestAnimationFrame(step);
+}
+
+function render(d){
+  var chg=Number(d.change||0),pct=Number(d.changePct||0);
+  var dir=chg>0?'up':chg<0?'down':'flat';
+  document.getElementById('spyPrice').textContent=fd(d.spot);
+  var sa=document.getElementById('spyArr');
+  sa.textContent=dir==='up'?'▲':dir==='down'?'▼':'';
+  sa.className='spy-arr '+dir;
+  var sc=document.getElementById('spyChg');
+  sc.className='spy-chg '+dir;
+  sc.textContent=(chg>=0?'+':'')+Number(chg).toFixed(2)+'  ('+(pct>=0?'+':'')+pct.toFixed(2)+'%)';
+  document.getElementById('spyOpen').textContent=fd(d.open);
+  document.getElementById('spyPrev').textContent=fd(d.previousClose);
+  document.getElementById('spyHigh').textContent=fd(d.high);
+  document.getElementById('spyLow').textContent=fd(d.low);
+  document.getElementById('spyVol').textContent=d.volume?Number(d.volume).toLocaleString():'—';
+
+  _pfNow=d.pfNow||2691.43;
+  var pfDir=Number(d.pfChg||0)>0?'up':Number(d.pfChg||0)<0?'down':'flat';
+  var pa=document.getElementById('pfArr');
+  pa.textContent=pfDir==='up'?'▲':pfDir==='down'?'▼':'';
+  pa.className='pf-arr '+pfDir;
+  var pve=document.getElementById('pfVal');
+  if(_firstLoad){animNum(pve,_pfNow,1100);}
+  else{pve.textContent=fd(_pfNow);pve.classList.remove('numPop');void pve.offsetWidth;pve.classList.add('numPop');}
+
+  var mt=document.getElementById('mToday');
+  var pc=Number(d.pfChg||0),pp=Number(d.pfPct||0);
+  mt.className='metric-val '+(pc>=0?'up':'down');
+  mt.textContent=(pc>=0?'+$':'-$')+Math.abs(pc).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')+' ('+(pp>=0?'+':'')+pp.toFixed(2)+'%)';
+
+  var ma=document.getElementById('mAlltime');
+  var at=Number(d.pfAlltime||0),atp=Number(d.pfAlltimePct||0);
+  ma.className='metric-val '+(at>=0?'up':'down');
+  ma.textContent=(at>=0?'+$':'-$')+Math.abs(at).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',')+' ('+(atp>=0?'+':'')+atp.toFixed(2)+'%)';
+
+  document.getElementById('lastUpd').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour12:true,hour:'2-digit',minute:'2-digit'});
+
+  var body=document.getElementById('posBody');
+  if(!d.positions||!d.positions.length){body.innerHTML='<tr class="msg-row"><td colspan="13">NO POSITIONS DATA</td></tr>';_firstLoad=false;return;}
+  body.innerHTML=d.positions.map(function(p,i){
+    var tc=p.theta!=null&&Number(p.theta)<0?' class="td-neg"':'';
+    return '<tr style="animation-delay:'+(i*.09)+'s">'+
+      '<td>'+p.contract+'<span class="badge">CALL</span></td>'+
+      '<td class="td-s">'+fd(p.strike)+'</td>'+
+      '<td>'+p.expiry+'</td>'+
+      '<td class="td-d">'+p.dte+'d</td>'+
+      '<td>'+fd(p.mark)+'</td>'+
+      '<td>'+fd(p.bid)+'</td>'+
+      '<td>'+fd(p.ask)+'</td>'+
+      '<td>'+fiv(p.iv)+'</td>'+
+      '<td>'+fg(p.delta)+'</td>'+
+      '<td>'+fg(p.gamma)+'</td>'+
+      '<td'+tc+'>'+fg(p.theta)+'</td>'+
+      '<td>'+fg(p.vega)+'</td>'+
+      '<td>'+fk(p.oi)+'</td></tr>';
+  }).join('');
+  requestAnimationFrame(function(){document.querySelectorAll('#posBody tr:not(.msg-row)').forEach(function(r){r.classList.add('in');});});
+  _firstLoad=false;
+}
+
+function loadMarket(){
+  fetch('/api/market').then(function(r){return r.json();}).then(function(d){
+    if(d.error){document.getElementById('posBody').innerHTML='<tr class="msg-row"><td colspan="13" style="color:var(--red)">'+d.error+'</td></tr>';return;}
+    render(d);
+  }).catch(function(){document.getElementById('posBody').innerHTML='<tr class="msg-row"><td colspan="13" style="color:var(--red)">NETWORK ERROR</td></tr>';});
+}
+
+function isRegHours(t){if(!t||t.length<=10) return true;var tp=(t.split(' ')[1]||t.split('T')[1]||'').substring(0,8);return tp>='09:30:00'&&tp<'16:00:00';}
+function fxLabel(t){
+  if(!t) return '';
+  if(t.length>10){var d=new Date(t.replace(' ','T'));return d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});}
+  var d=new Date(t+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function drawChart(pts){
+  _pts=pts||[];
+  var svg=document.getElementById('chartSvg');
+  var rect=document.getElementById('chartArea').getBoundingClientRect();
+  _cW=Math.max(rect.width,200);_cH=Math.max(rect.height,60);
+  svg.setAttribute('viewBox','0 0 '+_cW+' '+_cH);svg.setAttribute('width',_cW);svg.setAttribute('height',_cH);
+  var oSvg=document.getElementById('overlaySvg');
+  oSvg.setAttribute('viewBox','0 0 '+_cW+' '+_cH);oSvg.setAttribute('width',_cW);oSvg.setAttribute('height',_cH);
+  if(!pts||pts.length<2){svg.innerHTML='<text x="'+((_cW)/2)+'" y="'+((_cH)/2)+'" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#C8C8C8">NO DATA</text>';return;}
+  var W=_cW,H=_cH;_pL=58;_pR=12;_pT=10;_pB=26;
+  var prices=pts.map(function(p){return Number(p.c);});
+  var minP=Math.min.apply(null,prices),maxP=Math.max.apply(null,prices),rng=maxP-minP||1;
+  var xOf=function(i){return _pL+(i/Math.max(pts.length-1,1))*(W-_pL-_pR);};
+  var yOf=function(p){return _pT+((maxP-p)/rng)*(H-_pT-_pB);};
+  var isUp=prices[prices.length-1]>=prices[0];
+  var color=isUp?'#166d2c':'#B91C1C';
+  var lineD=pts.map(function(p,i){return (i===0?'M':'L')+xOf(i).toFixed(1)+' '+yOf(Number(p.c)).toFixed(1);}).join(' ');
+  var lx=xOf(pts.length-1),ly=yOf(prices[prices.length-1]);
+  var fillD=lineD+' L'+lx.toFixed(1)+' '+(H-_pB)+' L'+_pL+' '+(H-_pB)+' Z';
+  var yHtml='';
+  for(var i=0;i<4;i++){var yp=minP+(rng/3)*i,y=yOf(yp).toFixed(1);yHtml+='<line x1="'+_pL+'" y1="'+y+'" x2="'+(W-_pR)+'" y2="'+y+'" stroke="#EBEBEB" stroke-width="1"/><text x="'+(_pL-5)+'" y="'+y+'" text-anchor="end" dominant-baseline="middle" font-family="Inter,sans-serif" font-size="9" fill="#B0B0B0">'+fd(yp)+'</text>';}
+  var xHtml='';
+  var step=Math.max(Math.floor(pts.length/5),1);
+  for(var j=0;j<pts.length;j+=step){xHtml+='<text x="'+xOf(j).toFixed(1)+'" y="'+(H-7)+'" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" fill="#B0B0B0">'+fxLabel(pts[j].t)+'</text>';}
+  var afterHtml='';
+  if(currentRange==='1d'){var ax=-1;for(var k=0;k<pts.length;k++){if(!isRegHours(pts[k].t)&&ax<0) ax=xOf(k);}if(ax>0){afterHtml='<rect x="'+ax.toFixed(1)+'" y="'+_pT+'" width="'+(W-_pR-ax).toFixed(1)+'" height="'+(H-_pT-_pB)+'" fill="rgba(0,0,0,0.025)"/><line x1="'+ax.toFixed(1)+'" y1="'+_pT+'" x2="'+ax.toFixed(1)+'" y2="'+(H-_pB)+'" stroke="#D0D0D0" stroke-width="1" stroke-dasharray="4,3"/>';}}
+  svg.innerHTML='<defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="'+color+'" stop-opacity="0.1"/><stop offset="100%" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs>'+
+    yHtml+xHtml+afterHtml+
+    '<path d="'+fillD+'" fill="url(#cg)"/>'+
+    '<path class="cline" d="'+lineD+'" fill="none" stroke="'+color+'" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="4" fill="'+color+'"><animate attributeName="r" values="3.5;5.5;3.5" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite"/></circle>'+
+    '<circle cx="'+lx.toFixed(1)+'" cy="'+ly.toFixed(1)+'" r="3.5" fill="'+color+'"/>';
+  var path=svg.querySelector('.cline');
+  try{var len=path.getTotalLength();path.style.strokeDasharray=len+' '+len;path.style.strokeDashoffset=len;requestAnimationFrame(function(){requestAnimationFrame(function(){path.style.transition='stroke-dashoffset 1.35s cubic-bezier(.22,1,.36,1)';path.style.strokeDashoffset='0';});});}catch(e){}
+}
+
+function loadChart(rng){
+  var now=Date.now(),c=chartCache[rng];
+  if(c&&now-c.ts<(CTTL[rng]||60000)){drawChart(c.data);return;}
+  fetch('/api/chart/'+rng).then(function(r){return r.json();}).then(function(data){if(Array.isArray(data)){chartCache[rng]={data:data,ts:Date.now()};drawChart(data);}}).catch(function(){});
+}
+
+function switchRange(btn,rng){
+  document.querySelectorAll('.rtab').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');currentRange=rng;loadChart(rng);
+}
+
+document.querySelectorAll('.rtab[data-dis]').forEach(function(tab){
+  var tip=document.getElementById('tabTip');
+  tab.addEventListener('mouseenter',function(){var tr=tab.getBoundingClientRect(),wr=tab.closest('.tabs-wrap').getBoundingClientRect();tip.style.left=(tr.left-wr.left+tr.width/2)+'px';tip.style.display='block';});
+  tab.addEventListener('mouseleave',function(){tip.style.display='none';});
+});
+
+var colTip=document.getElementById('colTip');
+document.querySelectorAll('thead th[data-tip]').forEach(function(th){
+  th.addEventListener('mouseenter',function(){
+    colTip.textContent=th.dataset.tip;colTip.className='vis';colTip.style.display='block';
+    var r=th.getBoundingClientRect();colTip.style.left=r.left+'px';colTip.style.top=(r.bottom+8)+'px';
+    var tw=colTip.offsetWidth;if(r.left+tw>window.innerWidth-8) colTip.style.left=(window.innerWidth-tw-8)+'px';
+  });
+  th.addEventListener('mouseleave',function(){colTip.style.display='none';colTip.className='';});
+});
+
+function onChartHover(e){
+  if(!_pts||_pts.length<2) return;
+  var rect=document.getElementById('chartArea').getBoundingClientRect();
+  var mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  var idx=Math.max(0,Math.min(_pts.length-1,Math.round((mx-_pL)/(_cW-_pL-_pR)*(_pts.length-1))));
+  var hp=Number(_pts[idx].c),lp=Number(_pts[_pts.length-1].c);
+  var xPos=(_pL+(idx/(_pts.length-1))*(_cW-_pL-_pR)).toFixed(1);
+  document.getElementById('overlaySvg').innerHTML='<line x1="'+xPos+'" y1="'+_pT+'" x2="'+xPos+'" y2="'+(_cH-_pB)+'" stroke="#C0C0C0" stroke-width="1" stroke-dasharray="3,2"/>';
+  var tt=document.getElementById('chartTooltip');
+  document.getElementById('ttPf').textContent=fd(_pfNow*(hp/lp));
+  document.getElementById('ttSpy').textContent='SPY '+fd(hp);
+  document.getElementById('ttTime').textContent=fxLabel(_pts[idx].t);
+  tt.style.display='block';
+  var ttW=tt.offsetWidth,ttH=tt.offsetHeight;
+  var lft=mx+14;if(lft+ttW>rect.width-4) lft=mx-ttW-14;
+  tt.style.left=lft+'px';tt.style.top=Math.max(4,Math.min(my-ttH/2,rect.height-ttH-4))+'px';
+}
+
+document.getElementById('chartArea').addEventListener('mousemove',onChartHover);
+document.getElementById('chartArea').addEventListener('mouseleave',function(){document.getElementById('overlaySvg').innerHTML='';document.getElementById('chartTooltip').style.display='none';});
+
+function toggleDr(){document.getElementById('drBtn').classList.toggle('open');document.getElementById('drMenu').classList.toggle('vis');}
+document.addEventListener('click',function(e){if(!document.getElementById('drWrap').contains(e.target)){document.getElementById('drBtn').classList.remove('open');document.getElementById('drMenu').classList.remove('vis');}});
+window.addEventListener('resize',function(){if(chartCache[currentRange]&&chartCache[currentRange].data) drawChart(chartCache[currentRange].data);});
+
+tick();
+setInterval(tick,1000);
+</script>
+</body>
+</html>

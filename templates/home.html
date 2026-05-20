@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Chyron Research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+html,body{
+  height:100vh;max-height:100vh;overflow:hidden;
+  background:#060606;
+  color:#fff;
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+body{
+  opacity:0;
+  animation:pageIn .9s cubic-bezier(.22,1,.36,1) .05s forwards;
+}
+
+@keyframes pageIn{from{opacity:0;}to{opacity:1;}}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(14px);}
+  to{opacity:1;transform:none;}
+}
+
+.bg-video{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:0;
+  opacity:.9;
+  pointer-events:none;
+}
+
+.grid-overlay{
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.022) 1px, transparent 1px);
+  background-size:8px 8px;
+}
+
+header{
+  position:fixed;
+  top:0;left:0;right:0;
+  z-index:10;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:26px 44px;
+}
+
+.brand{
+  font-size:15px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  color:rgba(255,255,255,.92);
+}
+
+.header-pill{
+  font-size:11.5px;
+  font-weight:500;
+  letter-spacing:.06em;
+  color:rgba(255,255,255,.45);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  padding:7px 16px;
+  user-select:none;
+}
+
+.main-content{
+  position:relative;
+  z-index:2;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding-left:min(9vw,110px);
+  padding-right:min(9vw,110px);
+  padding-top:0;
+  padding-bottom:0;
+}
+
+.content-block{
+  max-width:700px;
+}
+
+h1{
+  font-size:clamp(44px,5.2vw,74px);
+  font-weight:800;
+  letter-spacing:-.035em;
+  line-height:1.04;
+  color:#fff;
+  margin-bottom:22px;
+  animation:fadeUp .85s cubic-bezier(.22,1,.36,1) .28s both;
+}
+
+.subtext{
+  font-size:clamp(13.5px,1.15vw,16px);
+  font-weight:300;
+  line-height:1.7;
+  color:rgba(255,255,255,.52);
+  max-width:620px;
+  margin-bottom:34px;
+  animation:fadeUp .85s cubic-bezier(.22,1,.36,1) .42s both;
+  letter-spacing:.005em;
+}
+
+.cta-btn{
+  display:inline-block;
+  padding:11px 22px;
+  background:transparent;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;
+  color:rgba(255,255,255,.55);
+  font-size:12.5px;
+  font-weight:500;
+  font-family:'Inter',system-ui,sans-serif;
+  letter-spacing:.05em;
+  cursor:default;
+  user-select:none;
+  margin-bottom:30px;
+  animation:fadeUp .85s cubic-bezier(.22,1,.36,1) .54s both;
+}
+
+.inline-legal{
+  font-size:10px;
+  font-weight:400;
+  color:rgba(255,255,255,.22);
+  line-height:1.65;
+  max-width:600px;
+  letter-spacing:.01em;
+  animation:fadeUp .85s cubic-bezier(.22,1,.36,1) .64s both;
+}
+
+footer{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:10;
+  padding:18px 44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.footer-legal{
+  font-size:9.5px;
+  font-weight:400;
+  color:rgba(255,255,255,.18);
+  line-height:1.6;
+  letter-spacing:.015em;
+  text-align:center;
+  max-width:940px;
+}
+</style>
+</head>
+<body>
+
+<video class="bg-video" id="bgVideo" muted playsinline>
+  <source src="/static/bg.mp4" type="video/mp4"/>
+</video>
+
+<div class="grid-overlay"></div>
+
+<header>
+  <div class="brand">Chyron Research</div>
+  <div class="header-pill">Coming 2026</div>
+</header>
+
+<div class="main-content">
+  <div class="content-block">
+    <h1>Read, React,<br>Return.</h1>
+    <p class="subtext">Chyron Research processes high-volume market data into proprietary quantitative models, made available exclusively to institutional and hedge fund partners who require systematic, repeatable performance.</p>
+    <div class="cta-btn">Coming Q4 2026</div>
+    <p class="inline-legal">Past performance is not indicative of future results. All models and strategies involve inherent risk, including possible loss of principal. For informational purposes only.</p>
+  </div>
+</div>
+
+<footer>
+  <p class="footer-legal">Chyron Research does not provide investment advice and is not a registered investment advisor. This website is for informational purposes only and does not constitute an offer to buy or sell any security or investment product. Past performance is not indicative of future results. All quantitative strategies involve risk, including the possible loss of principal.</p>
+</footer>
+
+<script>
+var vid = document.getElementById('bgVideo');
+
+vid.addEventListener('loadedmetadata', function() {
+  vid.currentTime = 7;
+  vid.play();
+});
+
+vid.addEventListener('ended', function() {
+  vid.currentTime = 0;
+  vid.play();
+});
+
+vid.addEventListener('error', function() {});
+</script>
+
+</body>
+</html>
